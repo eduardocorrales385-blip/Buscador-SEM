@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscador de Materiales</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f8f9fa; }
+    h2 { color: #333; }
+    input {
+      width: 400px; padding: 10px; margin-bottom: 20px;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px; background-color: #007BFF; color: white;
+      border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%; border-collapse: collapse; background: white;
+    }
+    th, td {
+      border: 1px solid #ddd; padding: 8px; text-align: left;
+    }
+    th { background: #007BFF; color: white; }
+    tr:hover { background-color: #f1f1f1; }
+  </style>
+</head>
+<body>
+
+  <h2>Buscador de Materiales</h2>
+  
+  <input type="text" id="buscador" placeholder="Ejemplo: teppack 6202">
+  <button id="btnBuscar">Buscar</button>
+
+  <table id="tabla">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    // === URL de tu hoja publicada en CSV ===
+    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS59zBIjoV_T9-EeT_YKs-M9MA9OpY8etxSRA9Dn1vPAL7MwM8Qjeo4OugHtR1FJ79hAhA-wu_kV133/pub?output=csv';
+
+    fetch(url)
+      .then(res => res.text())
+      .then(data => {
+        const rows = data.split('\n').map(r => r.split(','));
+        const headers = rows[0];
+        const body = rows.slice(1);
+        const thead = document.querySelector('#tabla thead');
+        const tbody = document.querySelector('#tabla tbody');
+        const buscador = document.getElementById('buscador');
+        const btnBuscar = document.getElementById('btnBuscar');
+
+        // Crear encabezados dinámicamente
+        thead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+        // Función para mostrar filas según filtro
+        function mostrar(filtro = '') {
+          tbody.innerHTML = '';
+          const terminos = filtro.toLowerCase().split(' ').filter(t => t);
+
+          body.forEach(row => {
+            const texto = row.join(' ').toLowerCase();
+            const coincide = terminos.every(t => texto.includes(t));
+            if (coincide) {
+              const tr = document.createElement('tr');
+              row.forEach(c => {
+                const td = document.createElement('td');
+                td.textContent = c;
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            }
+          });
+        }
+
+        // Mostrar todo inicialmente
+        mostrar();
+
+        // Buscar cuando se hace clic en el botón
+        btnBuscar.addEventListener('click', () => mostrar(buscador.value));
+
+        // También permitir buscar presionando Enter
+        buscador.addEventListener('keypress', e => {
+          if (e.key === 'Enter') mostrar(buscador.value);
+        });
+      })
+      .catch(err => {
+        console.error('Error al cargar la hoja de cálculo:', err);
+      });
+  </script>
+
+</body>
+</html>
